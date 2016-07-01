@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.sparkexamples</groupId>
+    <artifactId>spark-example</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    
+    <repositories>
+		  <repository>
+		    <id>cloudera-repo-releases</id>
+		    <url>https://repository.cloudera.com/artifactory/repo/</url>
+		  </repository>
+		  <repository>
+		  	<id>Apache-HBase-Spark-snapshots</id>
+		  	<url>https://repository.apache.org/content/repositories/snapshots</url>
+		  </repository>
+		  <repository>
+		  	<id>Apache-HBase-Spark-release</id>
+		  	<url>https://repository.apache.org/content/repositories/releases</url>
+		  </repository>
+	</repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_2.10</artifactId>
+            <version>1.2.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- http://mvnrepository.com/artifact/org.apache.hadoop/hadoop-client -->
+		<dependency>
+		    <groupId>org.apache.hadoop</groupId>
+		    <artifactId>hadoop-client</artifactId>
+		    <version>2.7.2</version>
+		</dependency>
+		<!-- http://mvnrepository.com/artifact/org.apache.hbase/hbase-client -->
+		<dependency>
+		    <groupId>org.apache.hbase</groupId>
+		    <artifactId>hbase-client</artifactId>
+		    <version>0.98.6-cdh5.3.0</version>
+		</dependency>
+		<!-- SparkOnHBase -->
+		<dependency>
+			  <groupId>com.cloudera</groupId>
+			  <artifactId>spark-hbase</artifactId>
+			  <version>0.0.2-clabs</version>
+		</dependency>
+		<dependency>
+			  <groupId>com.mad.ContentExtractor</groupId>
+			  <artifactId>extractor</artifactId>
+			  <version>1.0</version>
+			  <scope>system</scope>
+			  <systemPath>${basedir}/lib/extractor.jar</systemPath>
+		</dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.1</version>
+            </plugin>
+            <plugin>
+		        <artifactId>maven-assembly-plugin</artifactId>
+		        <version>2.4</version>
+		        <configuration>
+		          <finalName>wordCount</finalName>
+		          <appendAssemblyId>false</appendAssemblyId>
+		          <archive>
+		          	<manifest>
+		          		<mainClass>org.sparkexample.WordCount.Main</mainClass>
+		          	</manifest>
+		          </archive>
+		          <descriptorRefs>
+		            <descriptorRef>jar-with-dependencies</descriptorRef>
+		          </descriptorRefs>
+		        </configuration>
+		        <executions>
+		          <execution>
+		            <id>make-assembly</id>
+		            <phase>package</phase>
+		            <goals>
+		              <goal>single</goal>
+		            </goals>
+		          </execution>
+		        </executions>
+	      	</plugin>
+        </plugins>
+    </build>
+</project>
