@@ -2,6 +2,7 @@ package jp.microad.spark;
 
 import scala.Serializable;
 
+//public class RowInfo {
 public class RowInfo implements Serializable {
 
 	private static final long serialVersionUID = 1L;

@@ -1,10 +1,10 @@
 package jp.microad.spark;
 
 import scala.Serializable;
-
-public class UrlInfo implements Serializable   {
+public class UrlInfo {
+//public class UrlInfo implements Serializable   {
 	
-	private static final long serialVersionUID = 1L;
+//	private static final long serialVersionUID = 1L;
 	private String row;
 	private String rawHtml;
 

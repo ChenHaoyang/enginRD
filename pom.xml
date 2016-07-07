@@ -21,6 +21,10 @@
 		  	<id>Apache-HBase-Spark-release</id>
 		  	<url>https://repository.apache.org/content/repositories/releases</url>
 		  </repository>
+		  <repository>
+	    <id>CodeLibs Repository</id>
+	    <url>http://maven.codelibs.org</url>
+	  </repository>
 	</repositories>
 
     <dependencies>
@@ -48,12 +52,41 @@
 			  <artifactId>spark-hbase</artifactId>
 			  <version>0.0.2-clabs</version>
 		</dependency>
+		   <!-- https://mvnrepository.com/artifact/org.apache.lucene/lucene-core -->
 		<dependency>
-			  <groupId>com.mad.ContentExtractor</groupId>
-			  <artifactId>extractor</artifactId>
-			  <version>1.0</version>
-			  <scope>system</scope>
-			  <systemPath>${basedir}/lib/extractor.jar</systemPath>
+		    <groupId>org.apache.lucene</groupId>
+		    <artifactId>lucene-core</artifactId>
+		    <version>6.1.0</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.apache.lucene</groupId>
+		    <artifactId>lucene-analyzers-common</artifactId>
+		    <version>6.1.0</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.codelibs</groupId>
+		    <artifactId>lucene-analyzers-kuromoji-ipadic-neologd</artifactId>
+		    <version>6.0.0-20160613</version>
+		    <scope>provided</scope>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.languagetool/language-en -->
+		<dependency>
+		    <groupId>org.languagetool</groupId>
+		    <artifactId>language-en</artifactId>
+	    	<version>3.4</version>
+	    	<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.jsoup</groupId>
+			<artifactId>jsoup</artifactId>
+			<version>1.9.1</version>
+			<scope>provided</scope>	
+		</dependency>
+	    <dependency>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
+			<version>2.6</version>
+			<scope>provided</scope>
 		</dependency>
     </dependencies>
 
@@ -68,11 +101,11 @@
 		        <artifactId>maven-assembly-plugin</artifactId>
 		        <version>2.4</version>
 		        <configuration>
-		          <finalName>wordCount</finalName>
+		          <finalName>EnginRD</finalName>
 		          <appendAssemblyId>false</appendAssemblyId>
 		          <archive>
 		          	<manifest>
-		          		<mainClass>org.sparkexample.WordCount.Main</mainClass>
+		          		<mainClass>jp.microad.spark.EnginRD</mainClass>
 		          	</manifest>
 		          </archive>
 		          <descriptorRefs>
