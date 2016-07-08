@@ -15,7 +15,7 @@ public class Constants {
     public static final int DEFAULT_PARTITION_COUNT = 100;
 
     /** URL_INFOテーブル **/
-    public static final String HBASE_TABLE_NAME_URL_INFO = "url_info_test_small";
+    public static final String HBASE_TABLE_NAME_URL_INFO = "url_info";
 
     /** 異常テーブル **/
     public static final String HBASE_TABLE_NAME_ERRORS = "errors";
