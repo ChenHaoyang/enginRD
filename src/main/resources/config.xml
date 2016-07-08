@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+	<comment>各種設定</comment>
+	<entry key="hbase.conf.core-site.xml">/etc/hbase/conf/core-site.xml</entry>
+	<entry key="hbase.conf.hbase-site.xml">/etc/hbase/conf/hbase-site.xml</entry>
+	<entry key="scan.count">100</entry>
+	<entry key="partition.count">100</entry>
+	<entry key="bulk.delete.batch.size">4</entry>
+</properties>
