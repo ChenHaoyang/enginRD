@@ -3,19 +3,19 @@ package jp.co.microad.spark;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 
 import jp.co.microad.spark.common.Config;
 import jp.co.microad.spark.common.Constants;
+import jp.co.microad.spark.entity.UrlInfo;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.Delete;
-import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Put;
-import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.spark.SparkConf;
@@ -44,33 +44,31 @@ public class EnginRD {
         JavaHBaseContext hbaseContext = new JavaHBaseContext(jsc, conf);
 
         // 異常テーブルデータを削除
-        JavaRDD<byte[]> deleteRdd = getRdd(Constants.HBASE_TABLE_NAME_ERRORS, hbaseContext);
+        JavaRDD<byte[]> deleteRdd = getDeleteRdd(Constants.HBASE_TABLE_NAME_ERRORS, hbaseContext);
         hbaseContext.bulkDelete(deleteRdd, Constants.HBASE_TABLE_NAME_ERRORS, new DeleteFunction(),
                 Config.getInt("bulk.delete.batch.size", Constants.DEFAULT_BULK_DELETE_BATCH_SIZE));
 
         // URL_INFOテーブルからデータを取得
-        List<byte[]> parallelizeList = getRdd(Constants.HBASE_TABLE_NAME_URL_INFO, hbaseContext).collect();
-        JavaRDD<byte[]> getRdd = jsc.parallelize(parallelizeList,
-                Config.getInt("partition.count", Constants.DEFAULT_PARTITION_COUNT));
+        JavaRDD<UrlInfo> getRdd = getGetRdd(Constants.HBASE_TABLE_NAME_URL_INFO, hbaseContext);
 
-        hbaseContext.foreachPartition(getRdd, new VoidFunction<Tuple2<Iterator<byte[]>, HConnection>>() {
+        hbaseContext.foreachPartition(getRdd, new VoidFunction<Tuple2<Iterator<UrlInfo>, HConnection>>() {
 
             private static final long serialVersionUID = 1L;
 
-            public void call(Tuple2<Iterator<byte[]>, HConnection> t) throws Exception {
+            public void call(Tuple2<Iterator<UrlInfo>, HConnection> t) throws Exception {
 
                 HTableInterface urlInfoTable = t._2.getTable(Bytes.toBytes(Constants.HBASE_TABLE_NAME_URL_INFO));
+                urlInfoTable.setAutoFlush(false, true);
                 HTableInterface errorTable = t._2.getTable(Bytes.toBytes(Constants.HBASE_TABLE_NAME_ERRORS));
+                errorTable.setAutoFlush(false, true);
 
                 ContentExtractor contentExtractor = new ContentExtractor(true, true, 0, t._2);
 
                 while (t._1().hasNext()) {
-                    byte[] rowId = t._1().next();
+                    UrlInfo urlInfo = t._1().next();
+                    byte[] rowId = urlInfo.getRow();
+                    byte[] rawHtmlByte = urlInfo.getRawHtml();
                     try {
-                        Result result = urlInfoTable.get(new Get(rowId));
-                        byte[] rawHtmlByte = result.getColumnLatestCell(
-                                Bytes.toBytes("raw_html"), null).getValueArray();
-
                         HashMap<String, String> analysedResult = contentExtractor.analyse(Bytes.toString(rawHtmlByte));
                         String title = analysedResult.get("meta_title");
                         String desc = analysedResult.get("meta_description");
@@ -131,7 +129,7 @@ public class EnginRD {
      * @param hbaseContext
      * @return
      */
-    public static JavaRDD<byte[]> getRdd(String tableName,
+    public static JavaRDD<byte[]> getDeleteRdd(String tableName,
             JavaHBaseContext hbaseContext) {
         Scan scan = new Scan();
         scan.setCaching(Config.getInt("scan.count", Constants.DEFAULT_SCAN_COUNT));
@@ -148,6 +146,44 @@ public class EnginRD {
                     }
 
                 });
+    }
+
+    /**
+     * テーブル名より、rddを取得
+     * 
+     * @param tableName
+     * @param hbaseContext
+     * @return
+     */
+    public static JavaRDD<UrlInfo> getGetRdd(String tableName,
+            JavaHBaseContext hbaseContext) {
+        Scan scan = new Scan();
+        scan.addFamily(Bytes.toBytes("raw_html"));
+        scan.setCaching(Config.getInt("scan.count", Constants.DEFAULT_SCAN_COUNT));
+
+        JavaRDD<Tuple2<byte[], List<Tuple3<byte[], byte[], byte[]>>>> javaRdd = hbaseContext.hbaseRDD(tableName, scan);
+
+        return javaRdd.map(new Function<Tuple2<byte[],
+                List<Tuple3<byte[], byte[], byte[]>>>, UrlInfo>() {
+
+                    public UrlInfo call(
+                            Tuple2<byte[], List<Tuple3<byte[], byte[], byte[]>>> v1)
+                            throws Exception {
+                        UrlInfo urlInfo = new UrlInfo();
+                        urlInfo.setRow(v1._1);
+                        ListIterator<Tuple3<byte[], byte[], byte[]>> it = v1
+                                ._2().listIterator();
+                        while (it.hasNext()) {
+                            Tuple3<byte[], byte[], byte[]> kv = it.next();
+                            if ("raw_html".equals(Bytes.toString(kv._1()))) {
+                                urlInfo.setRawHtml(kv._3());
+                                break;
+                            }
+                        }
+                        return urlInfo;
+                    }
+
+                }).repartition(Config.getInt("partition.count", Constants.DEFAULT_PARTITION_COUNT));
     }
 
     public static class DeleteFunction implements Function<byte[], Delete> {
