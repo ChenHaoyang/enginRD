@@ -94,6 +94,8 @@ public class EnginRD {
                     }
                 }
 
+                urlInfoTable.close();
+                errorTable.close();
             }
         });
 
